@@ -5,7 +5,7 @@ import MapaLoader from '@/components/mapa/MapaLoader'
 import { useReportes } from '@/hooks/useReportes'
 import { TIPO_LABELS, TIPO_COLORS, formatFecha } from '@/lib/utils'
 import type { Reporte, TipoReporte } from '@/types'
-import { RefreshCw, AlertCircle, MapPin, Radio, ThumbsUp, Plus, Menu, X, List } from 'lucide-react'
+import { RefreshCw, AlertCircle, MapPin, Radio, ThumbsUp, Plus, X, List } from 'lucide-react'
 import Link from 'next/link'
 
 const TIPOS: TipoReporte[] = ['rescate', 'suministro', 'via']

@@ -2,7 +2,6 @@
 // GET: Busca personas (fuzzy por nombre+apellido o cédula)
 // POST: Registra una nueva persona en un refugio
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { personaSchema } from '@/lib/validaciones'
 

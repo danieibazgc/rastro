@@ -1,7 +1,7 @@
 // src/lib/utils.ts
 // Utilidades generales del proyecto
 
-import { type ClassValue, clsx } from 'clsx'
+import { type ClassValue } from 'clsx'
 import { TipoReporte, EstadoSalud } from '@/types'
 
 // Combinar clases de Tailwind (sin necesidad de twMerge para este MVP)

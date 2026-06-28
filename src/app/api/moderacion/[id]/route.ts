@@ -66,7 +66,7 @@ export async function PATCH(
 }
 
 // GET: Lista reportes pendientes (para el panel de moderación)
-export async function GET(req: NextRequest) {
+export async function GET() {
   if (!validarToken()) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }

@@ -1,6 +1,6 @@
 // src/app/api/moderacion/route.ts
 // GET: Lista todos los reportes pendientes (panel de moderación)
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { cookies } from 'next/headers'
 
@@ -11,7 +11,7 @@ function validarToken(): boolean {
   return !!secret && token === secret
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   if (!validarToken()) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
