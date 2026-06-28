@@ -1,0 +1,185 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Importar Inter desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: #020617;
+    --surface: #0F172A;
+    --primary: #3B82F6;
+    --border: #1E293B;
+  }
+
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: #FFFFFF;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    /* Fondo con gradiente sutil para profundidad */
+    background-image:
+      radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(30, 58, 138, 0.06) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Scrollbar personalizada */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #020617;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3B82F6;
+  }
+}
+
+@layer components {
+  /* Card glass */
+  .glass-card {
+    @apply bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 rounded-xl;
+  }
+
+  /* Glass card con borde de acento */
+  .glass-card-accent {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border-radius: 11px;
+    position: relative;
+  }
+
+  .glass-card-accent::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 11px;
+    padding: 1px;
+    background: linear-gradient(145deg, rgba(96, 165, 250, 0.4) 0%, rgba(30, 58, 138, 0.1) 50%, transparent 100%);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Botón primario */
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-500 text-slate-100 font-medium px-4 py-3 rounded transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Botón secundario */
+  .btn-secondary {
+    @apply bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-4 py-2 rounded transition-all duration-150;
+  }
+
+  /* Botón de peligro */
+  .btn-danger {
+    @apply bg-red-900/40 hover:bg-red-800/60 text-red-400 border border-red-800/50 font-medium px-4 py-2 rounded transition-all duration-150;
+  }
+
+  /* Input base */
+  .input-base {
+    @apply w-full bg-slate-900/80 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500
+           focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500
+           transition-all duration-150 text-sm;
+  }
+
+  /* Label base */
+  .label-base {
+    @apply block text-slate-400 text-xs font-medium mb-1.5 uppercase tracking-wide;
+  }
+
+  /* Badge tipo */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border;
+  }
+
+  /* Texto error de formulario */
+  .field-error {
+    @apply text-red-400 text-xs mt-1;
+  }
+}
+
+/* Override de estilos de Leaflet para dark mode */
+.leaflet-container {
+  background: #0F172A !important;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid #1E293B !important;
+  border-radius: 11px !important;
+  box-shadow: rgba(59, 130, 246, 0.15) 0px 0px 20px 0px !important;
+  color: #FFFFFF !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.95) !important;
+}
+
+.leaflet-popup-close-button {
+  color: #94A3B8 !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-color: #1E293B !important;
+  color: #94A3B8 !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #1E293B !important;
+  color: #FFFFFF !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.7) !important;
+  color: #475569 !important;
+  font-size: 10px;
+}
+
+.leaflet-control-attribution a {
+  color: #3B82F6 !important;
+}
+
+/* Ocultar scrollbar manteniendo scroll (para filtros horizontales) */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch targets mínimos (44px) en mobile */
+@media (max-width: 640px) {
+  button, a[role="button"] {
+    min-height: 36px;
+  }
+}
