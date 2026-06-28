@@ -165,6 +165,7 @@ export default function ModeracionClientPage() {
 
               {/* Foto */}
               {r.foto_url && (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={r.foto_url}
                   alt="Foto adjunta"
