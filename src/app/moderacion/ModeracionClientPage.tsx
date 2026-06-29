@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Reporte } from '@/types'
 import { TIPO_LABELS, TIPO_COLORS, formatFecha } from '@/lib/utils'
 import Toast, { type ToastType } from '@/components/ui/Toast'
-import { Shield, CheckCircle, XCircle, AlertTriangle, RefreshCw, LogOut, Loader2, Clock } from 'lucide-react'
+import { Shield, CheckCircle, XCircle, AlertTriangle, RefreshCw, LogOut, Loader2, Clock, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -14,14 +14,17 @@ export default function ModeracionClientPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: ToastType } | null>(null)
+  const [vista, setVista] = useState<'pendientes' | 'publicados'>('pendientes')
   const [procesando, setProcesando] = useState<string | null>(null)
+  const [confirmando, setConfirmando] = useState<string | null>(null)
   const [notas, setNotas] = useState<Record<string, string>>({})
 
-  const cargar = useCallback(async () => {
+  const cargar = useCallback(async (estadoFiltro: 'pendiente' | 'publicado') => {
     setLoading(true)
     setError(null)
+    setConfirmando(null)
     try {
-      const res = await fetch('/api/moderacion')
+      const res = await fetch(`/api/moderacion?estado=${estadoFiltro}`)
       if (res.status === 401) {
         router.push('/moderacion/login')
         return
@@ -37,8 +40,8 @@ export default function ModeracionClientPage() {
   }, [router])
 
   useEffect(() => {
-    cargar()
-  }, [cargar])
+    cargar(vista === 'publicados' ? 'publicado' : 'pendiente')
+  }, [cargar, vista])
 
   async function moderar(id: string, estado: 'publicado' | 'rechazado' | 'sin_verificar') {
     setProcesando(id)
@@ -72,6 +75,29 @@ export default function ModeracionClientPage() {
     }
   }
 
+  async function eliminar(id: string) {
+    if (confirmando !== id) {
+      setConfirmando(id)
+      return
+    }
+    setProcesando(id)
+    setConfirmando(null)
+    try {
+      const res = await fetch(`/api/moderacion/${id}`, { method: 'DELETE' })
+      if (res.status === 401) {
+        router.push('/moderacion/login')
+        return
+      }
+      if (!res.ok) throw new Error('Error al eliminar')
+      setToast({ msg: 'Reporte eliminado permanentemente', tipo: 'success' })
+      setReportes((prev) => prev.filter((r) => r.id !== id))
+    } catch (err) {
+      setToast({ msg: err instanceof Error ? err.message : 'Error desconocido', tipo: 'error' })
+    } finally {
+      setProcesando(null)
+    }
+  }
+
   async function logout() {
     await fetch('/api/moderacion/login', { method: 'DELETE' })
     router.push('/moderacion/login')
@@ -88,12 +114,12 @@ export default function ModeracionClientPage() {
               <h1 className="text-lg sm:text-xl font-semibold text-white">Panel de moderación</h1>
             </div>
             <p className="text-slate-500 text-sm">
-              {loading ? 'Cargando…' : `${reportes.length} reporte${reportes.length !== 1 ? 's' : ''} pendiente${reportes.length !== 1 ? 's' : ''}`}
+              {loading ? 'Cargando…' : `${reportes.length} reporte${reportes.length !== 1 ? 's' : ''} ${vista === 'publicados' ? 'publicado' : 'pendiente'}${reportes.length !== 1 ? 's' : ''}`}
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <button
-              onClick={cargar}
+              onClick={() => cargar(vista === 'publicados' ? 'publicado' : 'pendiente')}
               disabled={loading}
               className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
               title="Recargar"
@@ -108,6 +134,26 @@ export default function ModeracionClientPage() {
               <span className="hidden sm:inline">Salir</span>
             </button>
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 p-1 bg-slate-900 rounded-xl border border-slate-800">
+          <button
+            onClick={() => setVista('pendientes')}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-150 ${
+              vista === 'pendientes' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            Pendientes
+          </button>
+          <button
+            onClick={() => setVista('publicados')}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-150 ${
+              vista === 'publicados' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            Publicados
+          </button>
         </div>
 
         {/* Error */}
@@ -129,8 +175,14 @@ export default function ModeracionClientPage() {
         {!loading && !error && reportes.length === 0 && (
           <div className="text-center py-20">
             <CheckCircle size={48} className="text-suministro mx-auto mb-4" />
-            <p className="text-white font-medium mb-2">¡Todo al día!</p>
-            <p className="text-slate-500 text-sm">No hay reportes pendientes de moderación.</p>
+            <p className="text-white font-medium mb-2">
+              {vista === 'publicados' ? 'Sin reportes publicados' : '¡Todo al día!'}
+            </p>
+            <p className="text-slate-500 text-sm">
+              {vista === 'publicados'
+                ? 'No hay reportes publicados en este momento.'
+                : 'No hay reportes pendientes de moderación.'}
+            </p>
           </div>
         )}
 
@@ -172,50 +224,87 @@ export default function ModeracionClientPage() {
                 />
               )}
 
-              {/* Nota de moderación */}
-              <div className="mb-4">
-                <label htmlFor={`nota-${r.id}`} className="label-base">
-                  Nota (opcional)
-                </label>
-                <input
-                  id={`nota-${r.id}`}
-                  type="text"
-                  value={notas[r.id] ?? ''}
-                  onChange={(e) => setNotas((prev) => ({ ...prev, [r.id]: e.target.value }))}
-                  className="input-base text-sm"
-                  placeholder="Motivo del rechazo, observación…"
-                />
-              </div>
+              {vista === 'pendientes' ? (
+                <>
+                  {/* Nota de moderación */}
+                  <div className="mb-4">
+                    <label htmlFor={`nota-${r.id}`} className="label-base">
+                      Nota (opcional)
+                    </label>
+                    <input
+                      id={`nota-${r.id}`}
+                      type="text"
+                      value={notas[r.id] ?? ''}
+                      onChange={(e) => setNotas((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                      className="input-base text-sm"
+                      placeholder="Motivo del rechazo, observación…"
+                    />
+                  </div>
 
-              {/* Acciones */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
-                  onClick={() => moderar(r.id, 'publicado')}
-                  disabled={procesando === r.id}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-suministro/20 hover:bg-suministro/30 text-suministro border border-suministro/30 text-sm font-medium transition-all duration-150 disabled:opacity-50 active:scale-95"
-                >
-                  {procesando === r.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                  Publicar
-                </button>
+                  {/* Acciones de moderación */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button
+                      onClick={() => moderar(r.id, 'publicado')}
+                      disabled={procesando === r.id}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-suministro/20 hover:bg-suministro/30 text-suministro border border-suministro/30 text-sm font-medium transition-all duration-150 disabled:opacity-50 active:scale-95"
+                    >
+                      {procesando === r.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                      Publicar
+                    </button>
 
-                <button
-                  onClick={() => moderar(r.id, 'sin_verificar')}
-                  disabled={procesando === r.id}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-via/10 hover:bg-via/20 text-via border border-via/30 text-sm font-medium transition-all duration-150 disabled:opacity-50 active:scale-95"
-                >
-                  <AlertTriangle size={14} />
-                  Sin verificar
-                </button>
+                    <button
+                      onClick={() => moderar(r.id, 'sin_verificar')}
+                      disabled={procesando === r.id}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-via/10 hover:bg-via/20 text-via border border-via/30 text-sm font-medium transition-all duration-150 disabled:opacity-50 active:scale-95"
+                    >
+                      <AlertTriangle size={14} />
+                      Sin verificar
+                    </button>
 
-                <button
-                  onClick={() => moderar(r.id, 'rechazado')}
-                  disabled={procesando === r.id}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-rescate/10 hover:bg-rescate/20 text-rescate border border-rescate/30 text-sm font-medium transition-all duration-150 disabled:opacity-50 active:scale-95"
-                >
-                  <XCircle size={14} />
-                  Rechazar
-                </button>
-              </div>
+                    <button
+                      onClick={() => moderar(r.id, 'rechazado')}
+                      disabled={procesando === r.id}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-rescate/10 hover:bg-rescate/20 text-rescate border border-rescate/30 text-sm font-medium transition-all duration-150 disabled:opacity-50 active:scale-95"
+                    >
+                      <XCircle size={14} />
+                      Rechazar
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Eliminar (vista publicados) */
+                <div className="flex items-center justify-end gap-2 mt-2">
+                  {confirmando === r.id ? (
+                    <>
+                      <span className="text-slate-400 text-sm">¿Eliminar permanentemente?</span>
+                      <button
+                        onClick={() => setConfirmando(null)}
+                        disabled={procesando === r.id}
+                        className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white border border-slate-700 hover:bg-slate-800 text-sm transition-all duration-150"
+                      >
+                        No
+                      </button>
+                      <button
+                        onClick={() => eliminar(r.id)}
+                        disabled={procesando === r.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rescate/20 hover:bg-rescate/30 text-rescate border border-rescate/30 text-sm font-medium transition-all duration-150 disabled:opacity-50"
+                      >
+                        {procesando === r.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                        Sí, eliminar
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => eliminar(r.id)}
+                      disabled={procesando === r.id}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rescate/10 hover:bg-rescate/20 text-rescate border border-rescate/30 text-sm font-medium transition-all duration-150 disabled:opacity-50 active:scale-95"
+                    >
+                      <Trash2 size={14} />
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

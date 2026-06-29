@@ -65,21 +65,28 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-// GET: Lista reportes pendientes (para el panel de moderación)
-export async function GET() {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   if (!validarToken()) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('reportes')
-    .select('*')
-    .eq('estado', 'pendiente')
-    .order('created_at', { ascending: true })
-
-  if (error) {
-    return NextResponse.json({ error: 'Error al obtener pendientes' }, { status: 500 })
+  const { id } = params
+  if (!id) {
+    return NextResponse.json({ error: 'ID de reporte requerido' }, { status: 400 })
   }
 
-  return NextResponse.json(data)
+  const { error } = await supabaseAdmin
+    .from('reportes')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('[DELETE /api/moderacion]', error)
+    return NextResponse.json({ error: 'Error al eliminar reporte' }, { status: 500 })
+  }
+
+  return new NextResponse(null, { status: 204 })
 }
