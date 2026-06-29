@@ -112,7 +112,6 @@ export default function MapaReportes({ reportes }: MapaReportesProps) {
 
               {/* Foto */}
               {reporte.foto_url && (
-                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={reporte.foto_url}
                   alt="Foto del reporte"
